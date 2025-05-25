@@ -1,0 +1,62 @@
+{
+  description = "Flake for the downstream fork of zotify";
+
+  inputs = {
+    # Latest stable Nixpkgs
+    nixpkgs.url = "github:nixos/nixpkgs/25.05";
+    music-tag.url = "./music-tag";
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    music-tag,
+  }: let
+    pname = "zotify";
+
+    version = "1.0.1";
+
+    # Systems supported
+    allSystems = [
+      "x86_64-linux" # 64-bit Intel/AMD Linux
+      "aarch64-linux" # 64-bit ARM Linux
+      "x86_64-darwin" # 64-bit Intel macOS
+      "aarch64-darwin" # 64-bit ARM macOS
+    ];
+
+    # Helper to provide system-specific attributes
+    forAllSystems = f:
+      nixpkgs.lib.genAttrs allSystems (system:
+        f {
+          pkgs = import nixpkgs {inherit system;};
+        });
+  in {
+    packages = forAllSystems ({pkgs}: {
+      default = let
+        python = pkgs.python3;
+      in
+        python.pkgs.buildPythonApplication {
+          src = builtins.fetchTarball {
+            url = "https://github.com/DraftKinner/${pname}/archive/refs/tags/v${version}.tar.gz";
+            sha256 = "0rvqfscxcwrzwldj3mlx8m9chypmwlzlgp1zg37nyw4fdicr2b06";
+          };
+
+          name = "zotify";
+
+          format = "pyproject";
+
+          env.PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION = "python";
+
+          propagatedBuildInputs = with python.pkgs; [pip setuptools pillow librespot music-tag.packages.${pkgs.system}.default mutagen pkce tqdm limits ffmpy pwinput tabulate];
+
+          pythonRelaxDeps = ["protobuf"];
+
+          pythonImportsCheck = ["zotify"];
+
+          postFixup = ''
+            wrapProgram $out/bin/zotify --set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION python
+          '';
+        };
+    });
+  };
+}
