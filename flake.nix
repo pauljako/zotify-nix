@@ -14,7 +14,7 @@
   }: let
     pname = "zotify";
 
-    version = "1.0.1";
+    version = "1.1.1";
 
     # Systems supported
     allSystems = [
@@ -38,7 +38,7 @@
         python.pkgs.buildPythonApplication {
           src = builtins.fetchTarball {
             url = "https://github.com/DraftKinner/${pname}/archive/refs/tags/v${version}.tar.gz";
-            sha256 = "0rvqfscxcwrzwldj3mlx8m9chypmwlzlgp1zg37nyw4fdicr2b06";
+            sha256 = "1z0i65a4kyggrypczp15k0i61bgvdxx1iwmv0z1zb0v2hnqhjijn";
           };
 
           name = "zotify";
